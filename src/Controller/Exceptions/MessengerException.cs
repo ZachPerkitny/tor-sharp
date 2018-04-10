@@ -20,7 +20,7 @@ using System;
 
 namespace TorController.Exceptions
 {
-    class MessengerException : TorControllerException
+    public class MessengerException : TorControllerException
     {
         public MessengerException(string message)
             : base(message) { }

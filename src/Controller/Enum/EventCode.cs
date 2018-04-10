@@ -16,19 +16,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-
-namespace TorController.Exceptions
+namespace TorController.Enum
 {
-    public class ControllerException : TorControllerException
+    public enum EventCode
     {
-        public ControllerException(string message)
-            : base(message) { }
-
-        public ControllerException(string format, params object[] args)
-            : base(format, args) { }
-
-        public ControllerException(string message, Exception innerException)
-            : base(message, innerException) { }
+        CIRC,
+        STREAM,
+        ORCONN,
+        BW,
+        DEBUG,
+        INFO,
+        NOTICE,
+        WARN,
+        ERR,
+        NEWDESC,
+        ADDRMAP,
+        AUTHDIR_NEWDESCS
     }
 }

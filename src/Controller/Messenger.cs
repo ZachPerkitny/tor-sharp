@@ -28,7 +28,7 @@ namespace TorController
 {
     /*
      * TC: A Tor control protocol
-     * Tor Response Grammar (2)
+     * Tor Response Grammar (Augmented Backus Naus Form) (2)
      * 
      * Commands from controller to Tor (2.2)
      * -------------------------------------
@@ -87,12 +87,10 @@ namespace TorController
 
                 return true;
             }
-            catch (SocketException)
+            catch (SocketException ex)
             {
-                // log it, idk  
+                throw new MessengerException(string.Format("Socket Exception: {0}", ex.Message), ex);
             }
-
-            return false;
         }
 
         /// <summary>
@@ -157,6 +155,17 @@ namespace TorController
             // Command = Keyword Arguments CRLF / "+" Keyword Arguments CRLF Data
             // Keyword = 1 * ALPHA
             // Arguments = *(SP / VCHAR)
+
+            if (string.IsNullOrEmpty(command.Keyword))
+            {
+                throw new MessengerException("Invalid Keyword, Expected atleast one character.");
+            }
+
+            if (command.Arguments == null)
+            {
+                command.Arguments = new object[0];
+            }
+
             return Encoding.ASCII.GetBytes(
                 $"{command.Keyword} {string.Join(" ", command.Arguments)}\r\n");
         }

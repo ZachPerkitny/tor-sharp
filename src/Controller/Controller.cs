@@ -25,6 +25,51 @@ using TorController.Pocos;
 
 namespace TorController
 {
+    /*
+     * TC: A Tor control protocol
+     * 
+     * General Purpose (Augmented Backus Naus Form) (2.1)
+     * Nonterminals atom, qcontent from RFC2822
+     * String = DQUOTE *qcontent DQUOTE
+     * 
+     * Tor Command Grammar (Augmented Backus Naus Form) (3)
+     * 
+     * SETCONF 3.1
+     * -----------
+     * "SETCONF" 1*(SP keyword ["=" String]) CRLF
+     * 
+     * RESETCONF 3.2
+     * -------------
+     * "RESETCONF" 1*(SP keyword ["=" String]) CRLF
+     * 
+     * GETCONF 3.3
+     * -----------
+     * "GETCONF" 1*(SP keyword) CRLF
+     * 
+     * SETEVENTS 3.4
+     * --------------
+     * "SETEVENTS" [SP "EXTENDED"] *(SP EventCode) CRLF
+     * 
+     * EventCode = "CIRC" / "STREAM" / "ORCONN" / "BW" / "DEBUG" /
+     *      "INFO" / "NOTICE" / "WARN" / "ERR" / "NEWDESC" / "ADDRMAP" /
+     *      "AUTHDIR_NEWDESCS"
+     * 
+     * AUTHENTICATE 3.5
+     * ----------------
+     * "AUTHENTICATE" [ SP 1*HEXDIG / QuotedString ] CRLF
+     * 
+     * SAVECONF 3.6
+     * ------------
+     * "SAVECONF" CRLF
+     * 
+     * SIGNAL 3.7
+     * ----------
+     * "SIGNAL" SP Signal CRLF
+     * 
+     * Signal = "RELOAD" / "SHUTDOWN" / "DUMP" / "DEBUG" / "HALT" /
+     *      "HUP" / "INT" / "USR1" / "USR2" / "TERM" / "NEWNYM"
+     */
+
     public class Controller : IDisposable
     {
         private readonly Messenger _messenger;
@@ -62,24 +107,39 @@ namespace TorController
         /// <returns></returns>
         public void SetConfiguration(string keyword, object value)
         {
-            Reply reply = _messenger.Send(new Command
-            {
-                Keyword = "SETCONF",
-                Arguments = new object[] { $"{keyword}={value}" }
-            });
-
-            ThrowIfNotOk(reply);
+            // "SETCONF" 1*(SP keyword ["=" String]) CRLF
+            SendKeyValue("SETCONF", keyword, value);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="keyValues"></param>
         public void SetConfiguration(IEnumerable<Tuple<string, object>> keyValues)
         {
-            Reply reply = _messenger.Send(new Command
-            {
-                Keyword = "SETCONF",
-                Arguments = keyValues.Select(kv => $"{kv.Item1}={kv.Item2}")
-            });
+            // "SETCONF" 1*(SP keyword ["=" String]) CRLF
+            SendKeyValues("SETCONF", keyValues);
+        }
 
-            ThrowIfNotOk(reply);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="keyword"></param>
+        /// <param name="value"></param>
+        public void ResetConfiguration(string keyword, object value)
+        {
+            // "RESETCONF" 1*(SP keyword ["=" String]) CRLF
+            SendKeyValue("RESETCONF", keyword, value);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="keyValues"></param>
+        public void ResetConfiguration(IEnumerable<Tuple<string, object>> keyValues)
+        {
+            // "RESETCONF" 1*(SP keyword ["=" String]) CRLF
+            SendKeyValues("RESETCONF", keyValues);
         }
 
         /// <summary>
@@ -89,6 +149,7 @@ namespace TorController
         /// <returns></returns>
         public Tuple<string, string> GetConfiguration(string keyword)
         {
+            // "GETCONF" 1*(SP keyword) CRLF
             Reply reply = _messenger.Send(new Command
             {
                 Keyword = "GETCONF",
@@ -108,6 +169,7 @@ namespace TorController
         /// <returns></returns>
         public IEnumerable<Tuple<string, string>> GetConfiguration(IEnumerable<string> keywords)
         {
+            // "GETCONF" 1*(SP keyword) CRLF
             Reply reply = _messenger.Send(new Command
             {
                 Keyword = "GETCONF",
@@ -129,9 +191,39 @@ namespace TorController
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="extended"></param>
+        /// <param name="eventCodes"></param>
+        public void SetEvents(bool extended, IEnumerable<EventCode> eventCodes)
+        {
+            // "SETEVENTS" [SP "EXTENDED"] *(SP EventCode) CRLF
+            // See 3.4 for EventCode Production rule
+            List<object> arguments = new List<object>();
+            if (extended)
+            {
+                arguments.Add("EXTENDED");
+            }
+
+            if (eventCodes != null)
+            {
+                arguments.Concat((IEnumerable<object>)eventCodes);
+            }
+
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = "SETEVENTS",
+                Arguments = arguments
+            });
+
+            ThrowIfNotOk(reply);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="password"></param>
         public void Authenticate(string password = "")
         {
+            // "AUTHENTICATE" [ SP 1*HEXDIG / QuotedString ] CRLF
             Reply reply = _messenger.Send(new Command
             {
                 Keyword = "AUTHENTICATE",
@@ -146,9 +238,25 @@ namespace TorController
         /// <summary>
         /// 
         /// </summary>
+        private void SaveConfiguration()
+        {
+            // "SAVECONF" CRLF
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = "SAVECONF"
+            });
+
+            ThrowIfNotOk(reply);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="signal"></param>
         public void Signal(Signal signal)
         {
+            // "SIGNAL" SP Signal CRLF
+            // See 3.7 for Signal Production rule
             Reply reply = _messenger.Send(new Command
             {
                 Keyword = "SIGNAL",
@@ -186,6 +294,59 @@ namespace TorController
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="command"></param>
+        /// <param name="keyword"></param>
+        /// <param name="value"></param>
+        private void SendKeyValue(string command, string keyword, object value)
+        {
+            // See SETCONF (3.1), RESETCONF (3.2) AND MAPADDRESS (3.8)
+            if (string.IsNullOrEmpty(keyword))
+            {
+                throw new ControllerException("Invalid Keyword, Expected atleast one character.");
+            }
+
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = command,
+                Arguments = new object[] { $"{keyword}=\"{value}\"" }
+            });
+
+            ThrowIfNotOk(reply);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="keyValues"></param>
+        private void SendKeyValues(string command, IEnumerable<Tuple<string, object>> keyValues)
+        {
+            // See SETCONF (3.1), RESETCONF (3.2) AND MAPADDRESS (3.8)
+            if (keyValues == null || keyValues.Count() < 1)
+            {
+                throw new ControllerException("Expected at least one Key-Value Pair");
+            }
+
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = command,
+                Arguments = keyValues.Select(kv =>
+                {
+                    if (string.IsNullOrEmpty(kv.Item1))
+                    {
+                        throw new ControllerException("Invalid Keyword, Expected atleast one character.");
+                    }
+
+                    return $"{kv.Item1}=\"{kv.Item2}\"";
+                })
+            });
+
+            ThrowIfNotOk(reply);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="replyLine"></param>
         /// <returns></returns>
         private Tuple<string, string> GetKeyValueFromReplyLine(ReplyLine replyLine)
@@ -210,7 +371,7 @@ namespace TorController
             if (!reply.IsOk)
             {
                 ReplyLine replyLine = reply.ReplyLines.First();
-                throw new ControllerException(replyLine.Status, replyLine.ReplyText);
+                throw new CommandException(replyLine.Status, replyLine.ReplyText);
             }
         }
     }

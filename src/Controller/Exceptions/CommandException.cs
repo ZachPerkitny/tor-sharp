@@ -17,18 +17,30 @@
 */
 
 using System;
+using TorController.Enum;
 
 namespace TorController.Exceptions
 {
-    public class ControllerException : TorControllerException
+    public class CommandException : TorControllerException
     {
-        public ControllerException(string message)
-            : base(message) { }
+        public Status Status { get; private set; }
 
-        public ControllerException(string format, params object[] args)
-            : base(format, args) { }
+        public CommandException(Status status, string message)
+            : base(message)
+        {
+            Status = status;
+        }
 
-        public ControllerException(string message, Exception innerException)
-            : base(message, innerException) { }
+        public CommandException(Status status, string format, params object[] args)
+            : base(format, args)
+        {
+            Status = status;
+        }
+
+        public CommandException(Status status, string message, Exception innerException)
+            : base(message, innerException)
+        {
+            Status = status;
+        }
     }
 }
