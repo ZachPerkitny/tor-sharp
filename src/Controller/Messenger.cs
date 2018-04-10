@@ -187,8 +187,8 @@ namespace TorController
             char c;
             while (true)
             {
-                c = Convert.ToChar(Receive(1)[0]);
-                if (c == '\r' && Convert.ToChar(Receive(1)[0]) == '\n')
+                c = (char)Receive(1)[0];
+                if (c == '\r' && (char)Receive(1)[0] == '\n')
                 {
                     return replyTextBuilder.ToString();
                 }
