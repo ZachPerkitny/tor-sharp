@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Socks\Socks.csproj" />
+    <ProjectReference Include="..\..\Controller\TorController.csproj" />
   </ItemGroup>
 
 </Project>

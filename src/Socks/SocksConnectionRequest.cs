@@ -151,7 +151,7 @@ namespace Socks
             return buffer.ToArray();
         }
 
-        private byte[] Recieve(int count)
+        private byte[] Receive(int count)
         {
             byte[] buffer = new byte[count];
             int offset = 0;
