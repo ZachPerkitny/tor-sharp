@@ -25,6 +25,9 @@ namespace TorController.Enum
      * 4yz Temporary Negative Completion Reply
      * 5yz Permanent Negative Completion Reply
      * 6yz Asynchronous Reply
+     * 
+     * Non Standard, Used Internally by Event Loop
+     * 9yz TorController Error
      */
     
     public enum Status
@@ -52,6 +55,11 @@ namespace TorController.Enum
         InvalidConfigurationValue = 553,
         InvalidDescriptor = 554,
         UnmanagedEntity = 555,
-        AsynchronousEventNotification = 650
+        AsynchronousEventNotification = 650,
+        // ------------------
+        // NON STANDARD START
+        // ------------------
+        // Start Internal Tor Controller Statuses
+        MessengerError = 999
     }
 }

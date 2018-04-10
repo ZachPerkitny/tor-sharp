@@ -16,40 +16,18 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Collections.Generic;
-using System.Linq;
-using TorController.Enum;
+using System;
+using TorController.Pocos;
 
-namespace TorController.Pocos
+namespace TorController.Events
 {
-    internal class Reply
+    internal class AsyncEventArgs : EventArgs
     {
-        public IEnumerable<ReplyLine> ReplyLines { get; set; }
+        public Reply Reply { get; private set; }
 
-        public bool IsOk
+        public AsyncEventArgs(Reply reply)
         {
-            get
-            {
-                if (ReplyLines == null)
-                {
-                    return false;
-                }
-
-                return ReplyLines.Any(r => r.Status == Status.OK);
-            }
-        }
-
-        public bool IsAsync
-        {
-            get
-            {
-                if (ReplyLines == null)
-                {
-                    return false;
-                }
-
-                return ReplyLines.Any(r => r.Status == Status.AsynchronousEventNotification);
-            }
+            Reply = reply;
         }
     }
 }

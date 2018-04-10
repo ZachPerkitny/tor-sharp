@@ -1,5 +1,6 @@
 ﻿using System;
 using TorController;
+using TorController.Enum;
 
 namespace Driver
 {
@@ -7,12 +8,13 @@ namespace Driver
     {
         static void Main(string[] args)
         {
-            using (Controller controller = new Controller())
+            using (Commander commander = new Commander())
             {
-                controller.Connect();
-                controller.Authenticate("finance56");
-                controller.Signal(TorController.Enum.Signal.DUMP);
-                controller.GetConfiguration(new string[] { "co", "p", "socks" });
+                commander.Connect();
+                commander.Authenticate("finance56");
+                commander.SetEvents(new EventCode[] { EventCode.CIRC, EventCode.DEBUG, EventCode.NOTICE });
+                commander.Signal(Signal.DEBUG);
+                Console.ReadLine();
             }   
 
             Console.ReadLine();

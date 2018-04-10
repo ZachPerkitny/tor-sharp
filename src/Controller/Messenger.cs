@@ -17,10 +17,13 @@
 */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using TorController.Enum;
+using TorController.Events;
 using TorController.Exceptions;
 using TorController.Pocos;
 
@@ -60,6 +63,10 @@ namespace TorController
         private readonly ushort _port;
         private readonly Socket _socket;
 
+        // internally it uses a concurrent queue
+        private readonly BlockingCollection<Reply> _replies = new BlockingCollection<Reply>();
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
+
         private bool _disposed = false;
 
         /// <summary>
@@ -78,14 +85,18 @@ namespace TorController
         /// <summary>
         /// 
         /// </summary>
+        public event EventHandler<AsyncEventArgs> ReceivedAsyncReply;
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
-        public bool Connect()
+        public void Connect()
         {
             try
             {
                 _socket.Connect("localhost", _port);
-
-                return true;
+                new Thread(StartReadReplyLoop).Start();
             }
             catch (SocketException ex)
             {
@@ -104,7 +115,7 @@ namespace TorController
                 byte[] bCommand = BuildCommand(command);
                 _socket.Send(bCommand);
 
-                return ReadReply();
+                return _replies.Take();
             }
             catch (SocketException ex)
             {
@@ -138,6 +149,9 @@ namespace TorController
             {
                 if (disposing)
                 {
+                    _cts.Cancel();
+                    _cts.Dispose();
+
                     _socket.Dispose();
                 }
 
@@ -168,6 +182,45 @@ namespace TorController
 
             return Encoding.ASCII.GetBytes(
                 $"{command.Keyword} {string.Join(" ", command.Arguments)}\r\n");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void StartReadReplyLoop()
+        {
+            while (!_cts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    Reply reply = ReadReply();
+                    if (reply.IsAsync)
+                    {
+                        ReceivedAsyncReply?.Invoke(this, new AsyncEventArgs(reply));
+                    }
+                    else
+                    {
+                        _replies.Add(reply);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // send needs something, and want to keep
+                    // exception message, sorta strange,
+                    // will probably refactor
+                    _replies.Add(new Reply
+                    {
+                        ReplyLines = new List<ReplyLine>
+                        {
+                            new ReplyLine
+                            {
+                                ReplyText = ex.Message,
+                                Status = Status.MessengerError
+                            }
+                        }
+                    });
+                }
+            }
         }
 
         /// <summary>

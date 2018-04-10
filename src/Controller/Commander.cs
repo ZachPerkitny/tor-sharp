@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TorController.Enum;
+using TorController.Events;
 using TorController.Exceptions;
 using TorController.Pocos;
 
@@ -70,7 +71,7 @@ namespace TorController
      *      "HUP" / "INT" / "USR1" / "USR2" / "TERM" / "NEWNYM"
      */
 
-    public class Controller : IDisposable
+    public class Commander : IDisposable
     {
         private readonly Messenger _messenger;
 
@@ -80,9 +81,10 @@ namespace TorController
         /// 
         /// </summary>
         /// <param name="controlPort"></param>
-        public Controller(ushort controlPort = 9051)
+        public Commander(ushort controlPort = 9051)
         {
             _messenger = new Messenger(controlPort);
+            _messenger.ReceivedAsyncReply += HandleAsyncEvent;
         }
 
         /// <summary>
@@ -94,9 +96,9 @@ namespace TorController
         /// 
         /// </summary>
         /// <returns></returns>
-        public bool Connect()
+        public void Connect()
         {
-            return _messenger.Connect();
+            _messenger.Connect();
         }
 
         /// <summary>
@@ -191,9 +193,9 @@ namespace TorController
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="extended"></param>
         /// <param name="eventCodes"></param>
-        public void SetEvents(bool extended, IEnumerable<EventCode> eventCodes)
+        /// <param name="extended"></param>
+        public void SetEvents(IEnumerable<EventCode> eventCodes, bool extended = false)
         {
             // "SETEVENTS" [SP "EXTENDED"] *(SP EventCode) CRLF
             // See 3.4 for EventCode Production rule
@@ -205,7 +207,10 @@ namespace TorController
 
             if (eventCodes != null)
             {
-                arguments.Concat((IEnumerable<object>)eventCodes);
+                foreach (EventCode eventCode in eventCodes)
+                {
+                    arguments.Add(eventCode);
+                }
             }
 
             Reply reply = _messenger.Send(new Command
@@ -373,6 +378,16 @@ namespace TorController
                 ReplyLine replyLine = reply.ReplyLines.First();
                 throw new CommandException(replyLine.Status, replyLine.ReplyText);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
+        private void HandleAsyncEvent(object sender, AsyncEventArgs args)
+        {
+
         }
     }
 }
