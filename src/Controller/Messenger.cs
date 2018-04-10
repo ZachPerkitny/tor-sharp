@@ -17,9 +17,11 @@
 */
 
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using TorController.Enum;
+using TorController.Exceptions;
 using TorController.Pocos;
 
 namespace TorController
@@ -85,7 +87,7 @@ namespace TorController
 
                 return true;
             }
-            catch (Exception)
+            catch (SocketException)
             {
                 // log it, idk  
             }
@@ -97,18 +99,18 @@ namespace TorController
         /// 
         /// </summary>
         /// <param name="command"></param>
-        public void Send(Command command)
+        public Reply Send(Command command)
         {
             try
             {
                 byte[] bCommand = BuildCommand(command);
                 _socket.Send(bCommand);
 
-                ReadReply();
+                return ReadReply();
             }
-            catch (Exception)
+            catch (SocketException ex)
             {
-                // log it, idk
+                throw new MessengerException(string.Format("Socket Exception: {0}", ex.Message), ex);
             }
         }
 
@@ -128,6 +130,10 @@ namespace TorController
             Dispose(true);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -158,22 +164,32 @@ namespace TorController
         /// <summary>
         /// 
         /// </summary>
-        private void ReadReply()
+        private Reply ReadReply()
         {
+            List<ReplyLine> replyLines = new List<ReplyLine>();
             while (true)
             {
-                Status status = ReadStatus();
+                ReplyLine replyLine = new ReplyLine
+                {
+                    Status = ReadStatus()
+                };
+
+                replyLines.Add(replyLine);
+
                 switch ((char)Receive(1)[0])
                 {
                     case '-':
-                        ReadReplyText();
+                        replyLine.ReplyText = ReadReplyText();
                         break;
                     case '+':
-                        ReadReplyText();
+                        replyLine.ReplyText = ReadReplyText();
+                        // TODO(Zvp): data
                         break;
-                    default: // end reply line, can return here
-                        ReadReplyText();
-                        return;
+                    case ' ': // end reply line, can return here
+                        replyLine.ReplyText = ReadReplyText();
+                        return new Reply { ReplyLines = replyLines };
+                    default:
+                        throw new MessengerException("Unexpected Divider, Expected '-', '+' or ' '.");
                 }
             }
         }
@@ -224,7 +240,7 @@ namespace TorController
 
                 if (received == 0)
                 {
-                    throw new Exception();
+                    throw new MessengerException("Unexpected End of Message, Expected {0} bytes, Got {1}", count, offset);
                 }
             }
 

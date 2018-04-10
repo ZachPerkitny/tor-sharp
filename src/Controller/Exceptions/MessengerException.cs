@@ -1,5 +1,5 @@
 ﻿/*
-    A TCP Server supporting SOCKS4, SOCKS4a and SOCKS5 Protocols
+    TorController - Uses the TOR Control Protocol to communicate with the TOR Process
     Copyright (C) 2018 Zach Perkitny
 
     This program is free software: you can redistribute it and/or modify
@@ -16,11 +16,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace Socks.Enum
+using System;
+
+namespace TorController.Exceptions
 {
-    enum SocksStatus : byte
+    class MessengerException : TorControllerException
     {
-        RequestGranted = 0x5A,
-        RequestRejectedOrFailed = 0x5B
+        public MessengerException(string message)
+            : base(message) { }
+
+        public MessengerException(string format, params object[] args)
+            : base(format, args) { }
+
+        public MessengerException(string message, Exception innerException)
+            : base(message, innerException) { }
     }
 }

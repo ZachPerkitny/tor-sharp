@@ -11,6 +11,8 @@ namespace Driver
             {
                 controller.Connect();
                 controller.Authenticate("finance56");
+                controller.Signal(TorController.Enum.Signal.DUMP);
+                controller.GetConfiguration(new string[] { "co", "p", "socks" });
             }   
 
             Console.ReadLine();

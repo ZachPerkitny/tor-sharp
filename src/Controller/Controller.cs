@@ -18,7 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TorController.Enum;
+using TorController.Exceptions;
 using TorController.Pocos;
 
 namespace TorController
@@ -58,11 +60,26 @@ namespace TorController
         /// <param name="keyword"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public bool SetConfiguration(string keyword, object value)
+        public void SetConfiguration(string keyword, object value)
         {
-            //Response response = SendCommand("SETCONF {0}={1}", keyword, value);
-            //return response != null && response.IsOk();
-            throw new NotImplementedException();
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = "SETCONF",
+                Arguments = new object[] { $"{keyword}={value}" }
+            });
+
+            ThrowIfNotOk(reply);
+        }
+
+        public void SetConfiguration(IEnumerable<Tuple<string, object>> keyValues)
+        {
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = "SETCONF",
+                Arguments = keyValues.Select(kv => $"{kv.Item1}={kv.Item2}")
+            });
+
+            ThrowIfNotOk(reply);
         }
 
         /// <summary>
@@ -72,7 +89,16 @@ namespace TorController
         /// <returns></returns>
         public Tuple<string, string> GetConfiguration(string keyword)
         {
-            throw new NotImplementedException();
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = "GETCONF",
+                Arguments = new object[] { keyword }
+            });
+
+            ThrowIfNotOk(reply);
+
+            ReplyLine replyLine = reply.ReplyLines.First();
+            return GetKeyValueFromReplyLine(replyLine);
         }
 
         /// <summary>
@@ -82,48 +108,68 @@ namespace TorController
         /// <returns></returns>
         public IEnumerable<Tuple<string, string>> GetConfiguration(IEnumerable<string> keywords)
         {
-            throw new NotImplementedException();
+            Reply reply = _messenger.Send(new Command
+            {
+                Keyword = "GETCONF",
+                Arguments = keywords
+            });
+
+            ThrowIfNotOk(reply);
+
+            List<Tuple<string, string>> keyValues = new List<Tuple<string, string>>();
+            foreach (ReplyLine replyLine in reply.ReplyLines)
+            {
+                Tuple<string, string> keyValue = GetKeyValueFromReplyLine(replyLine);
+                keyValues.Add(keyValue);
+            }
+
+            return keyValues;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="password"></param>
-        /// <returns></returns>
-        public bool Authenticate(string password = "")
+        public void Authenticate(string password = "")
         {
-            _messenger.Send(new Command
+            Reply reply = _messenger.Send(new Command
             {
                 Keyword = "AUTHENTICATE",
                 Arguments = new object[] { $"\"{password}\"" }
             });
 
-            //Response response = SendCommand("AUTHENTICATE \"{0}\"", password);
-            //if (response != null && response.IsOk())
-            //{
-            //    IsAuthenticated = true;
-            //    return true;
-            //}
+            ThrowIfNotOk(reply);
 
-            return false;
+            IsAuthenticated = true;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="signal"></param>
-        /// <returns></returns>
-        public bool Signal(Signal signal)
+        public void Signal(Signal signal)
         {
-            _messenger.Send(new Command
+            Reply reply = _messenger.Send(new Command
             {
                 Keyword = "SIGNAL",
                 Arguments = new object[] { signal }
             });
 
-            return false;
+            ThrowIfNotOk(reply);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -137,9 +183,35 @@ namespace TorController
             }
         }
 
-        public void Dispose()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="replyLine"></param>
+        /// <returns></returns>
+        private Tuple<string, string> GetKeyValueFromReplyLine(ReplyLine replyLine)
         {
-            Dispose(true);
+            if (replyLine.ReplyText.Contains("="))
+            {
+                string[] keyValue = replyLine.ReplyText.Split(new char[] { '=' });
+                return Tuple.Create(keyValue[0], keyValue[1]);
+            }
+            else
+            {
+                return Tuple.Create(replyLine.ReplyText, string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="reply"></param>
+        private void ThrowIfNotOk(Reply reply)
+        {
+            if (!reply.IsOk)
+            {
+                ReplyLine replyLine = reply.ReplyLines.First();
+                throw new ControllerException(replyLine.Status, replyLine.ReplyText);
+            }
         }
     }
 }
