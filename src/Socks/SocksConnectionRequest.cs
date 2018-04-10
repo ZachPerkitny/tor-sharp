@@ -64,14 +64,14 @@ namespace Socks
 
         public void Process()
         {
-            SocksVersion = (SocksVersion)Recieve(1)[0];
+            SocksVersion = (SocksVersion)Receive(1)[0];
             switch (SocksVersion)
             {
                 case SocksVersion.Socks4:
                 {
-                    CommandCode = (CommandCode)Recieve(1)[0];
+                    CommandCode = (CommandCode)Receive(1)[0];
                     Port = ReadPort();
-                    byte[] ipv4Address = Recieve(4);
+                    byte[] ipv4Address = Receive(4);
                     UserID = ReadNullTerminated();
 
                     // SOCKS4a allows for a domain name
@@ -115,9 +115,9 @@ namespace Socks
 
         private ushort ReadPort()
         {
-            byte[] port = Recieve(2);
+            byte[] port = Receive(2);
             // in network byte order
-            return (ushort)(((port[0] << 8) | port[1]) + (((port[0] & 0x80) == 1) ? ushort.MinValue : 0));
+            return (ushort)((port[0] << 8) | port[1]);
         }
 
         private bool IsSocks4aAddress(byte[] ipv4Address)
@@ -138,7 +138,7 @@ namespace Socks
             List<byte> buffer = new List<byte>();
             while (true)
             {
-                byte b = Recieve(1)[0];
+                byte b = Receive(1)[0];
 
                 if (b == 0)
                 {

@@ -7,9 +7,11 @@ namespace Driver
     {
         static void Main(string[] args)
         {
-            Controller controller = new Controller();
-            controller.Connect();
-            controller.Authenticate();
+            using (Controller controller = new Controller())
+            {
+                controller.Connect();
+                controller.Authenticate("finance56");
+            }   
 
             Console.ReadLine();
         }

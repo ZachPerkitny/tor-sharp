@@ -18,18 +18,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Net.Sockets;
-using System.Text;
 using TorController.Enum;
+using TorController.Pocos;
 
 namespace TorController
 {
-    public class Controller
+    public class Controller : IDisposable
     {
-        private const int BUFFER_SIZE = 1024;
+        private readonly Messenger _messenger;
 
-        private readonly ushort _controlPort;
-        private readonly Socket _controlSocket;
+        private bool _disposed = false;
 
         /// <summary>
         /// 
@@ -37,11 +35,7 @@ namespace TorController
         /// <param name="controlPort"></param>
         public Controller(ushort controlPort = 9051)
         {
-            _controlPort = controlPort;
-            _controlSocket = new Socket(
-                AddressFamily.InterNetwork,
-                SocketType.Stream,
-                ProtocolType.Tcp);
+            _messenger = new Messenger(controlPort);
         }
 
         /// <summary>
@@ -55,20 +49,7 @@ namespace TorController
         /// <returns></returns>
         public bool Connect()
         {
-            try
-            {
-                _controlSocket.Connect(
-                    "localhost",
-                    _controlPort);
-
-                return true;
-            }
-            catch (Exception)
-            {
-                // log it, idk  
-            }
-
-            return false;
+            return _messenger.Connect();
         }
 
         /// <summary>
@@ -79,8 +60,9 @@ namespace TorController
         /// <returns></returns>
         public bool SetConfiguration(string keyword, object value)
         {
-            Response response = SendCommand("SETCONF {0}={1}", keyword, value);
-            return response != null && response.IsOk();
+            //Response response = SendCommand("SETCONF {0}={1}", keyword, value);
+            //return response != null && response.IsOk();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -110,12 +92,18 @@ namespace TorController
         /// <returns></returns>
         public bool Authenticate(string password = "")
         {
-            Response response = SendCommand("AUTHENTICATE \"{0}\"", password);
-            if (response != null && response.IsOk())
+            _messenger.Send(new Command
             {
-                IsAuthenticated = true;
-                return true;
-            }
+                Keyword = "AUTHENTICATE",
+                Arguments = new object[] { $"\"{password}\"" }
+            });
+
+            //Response response = SendCommand("AUTHENTICATE \"{0}\"", password);
+            //if (response != null && response.IsOk())
+            //{
+            //    IsAuthenticated = true;
+            //    return true;
+            //}
 
             return false;
         }
@@ -127,76 +115,31 @@ namespace TorController
         /// <returns></returns>
         public bool Signal(Signal signal)
         {
-            Response response = SendCommand("SIGNAL {0}", signal);
-            return response != null && response.IsOk();
+            _messenger.Send(new Command
+            {
+                Keyword = "SIGNAL",
+                Arguments = new object[] { signal }
+            });
+
+            return false;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="format"></param>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private Response SendCommand(string format, params object[] args)
+        protected virtual void Dispose(bool disposing)
         {
-            try
+            if (!_disposed)
             {
-                byte[] command = Encoding.ASCII.GetBytes(
-                    string.Format($"{format}\r\n", args));
-                _controlSocket.Send(command);
-
-                byte[] response = RecieveUntilCRLF();
-                return Response.Parse(Encoding.ASCII.GetString(response));
-            }
-            catch (Exception)
-            {
-                // log it
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        private byte[] Recieve(int count)
-        {
-            byte[] buffer = new byte[count];
-            int offset = 0;
-
-            while (offset < count)
-            {
-                int received = _controlSocket.Receive(buffer, offset, buffer.Length - offset, 0);
-
-                offset += received;
-
-                if (received == 0)
+                if (disposing)
                 {
-                    throw new Exception();
+                    _messenger.Dispose();
                 }
-            }
 
-            return buffer;
+                _disposed = true;
+            }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        private byte[] RecieveUntilCRLF()
+        public void Dispose()
         {
-            List<byte> response = new List<byte>();
-            bool lastCR = false;
-
-            while (true)
-            {
-                byte b = Recieve(1)[0];
-                response.Add(b);
-            }
-
-            return response.ToArray();
+            Dispose(true);
         }
     }
 }
