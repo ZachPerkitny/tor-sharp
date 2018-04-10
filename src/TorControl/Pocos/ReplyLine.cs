@@ -1,5 +1,5 @@
 ﻿/*
-    TorController - Uses the TOR Control Protocol to communicate with the TOR Process
+    TorControl - Uses the TOR Control Protocol to communicate with the TOR Process
     Copyright (C) 2018 Zach Perkitny
 
     This program is free software: you can redistribute it and/or modify
@@ -16,20 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace TorController.Enum
+using TorControl.Enum;
+
+namespace TorControl.Pocos
 {
-    public enum Signal
+    internal class ReplyLine
     {
-        RELOAD,
-        SHUTDOWN,
-        DUMP,
-        DEBUG,
-        HALT,
-        HUP,
-        INT,
-        USR1,
-        USR2,
-        TERM,
-        NEWNYM
+        public Status Status { get; set; }
+
+        public string ReplyText { get; set; }
     }
 }

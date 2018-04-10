@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Socks", "src\Socks\Socks.cs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Driver", "src\Driver\Driver.csproj", "{03A57F9A-7C0F-409D-BBE1-DD2B6EA867DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorController", "src\Controller\TorController.csproj", "{9C32B589-BA49-45D9-8D7C-08BA1A8B4193}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TorControl", "src\TorControl\TorControl.csproj", "{9C32B589-BA49-45D9-8D7C-08BA1A8B4193}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

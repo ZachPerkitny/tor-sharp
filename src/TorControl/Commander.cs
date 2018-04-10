@@ -1,5 +1,5 @@
 ﻿/*
-    TorController - Uses the TOR Control Protocol to communicate with the TOR Process
+    TorControl - Uses the TOR Control Protocol to communicate with the TOR Process
     Copyright (C) 2018 Zach Perkitny
 
     This program is free software: you can redistribute it and/or modify
@@ -19,12 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TorController.Enum;
-using TorController.Events;
-using TorController.Exceptions;
-using TorController.Pocos;
+using TorControl.Enum;
+using TorControl.Events;
+using TorControl.Exceptions;
+using TorControl.Pocos;
 
-namespace TorController
+namespace TorControl
 {
     /*
      * TC: A Tor control protocol

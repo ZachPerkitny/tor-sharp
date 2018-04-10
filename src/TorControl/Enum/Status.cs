@@ -1,5 +1,5 @@
 ﻿/*
-    TorController - Uses the TOR Control Protocol to communicate with the TOR Process
+    TorControl - Uses the TOR Control Protocol to communicate with the TOR Process
     Copyright (C) 2018 Zach Perkitny
 
     This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace TorController.Enum
+namespace TorControl.Enum
 {
     /* TC: A Tor control protocol
      * Tor Replies (4)
@@ -27,7 +27,7 @@ namespace TorController.Enum
      * 6yz Asynchronous Reply
      * 
      * Non Standard, Used Internally by Event Loop
-     * 9yz TorController Error
+     * 9yz TorControl Error
      */
     
     public enum Status

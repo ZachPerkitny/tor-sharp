@@ -1,6 +1,6 @@
 ﻿using System;
-using TorController;
-using TorController.Enum;
+using TorControl;
+using TorControl.Enum;
 
 namespace Driver
 {

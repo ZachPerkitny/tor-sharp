@@ -1,5 +1,5 @@
 ﻿/*
-    TorController - Uses the TOR Control Protocol to communicate with the TOR Process
+    TorControl - Uses the TOR Control Protocol to communicate with the TOR Process
     Copyright (C) 2018 Zach Perkitny
 
     This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,18 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Collections.Generic;
+using System;
+using TorControl.Pocos;
 
-namespace TorController.Pocos
+namespace TorControl.Events
 {
-    internal class Command
+    internal class AsyncEventArgs : EventArgs
     {
-        public string Keyword { get; set; }
+        public Reply Reply { get; private set; }
 
-        public IEnumerable<object> Arguments { get; set; }
+        public AsyncEventArgs(Reply reply)
+        {
+            Reply = reply;
+        }
     }
 }

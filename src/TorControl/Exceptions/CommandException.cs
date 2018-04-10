@@ -1,5 +1,5 @@
 ﻿/*
-    TorController - Uses the TOR Control Protocol to communicate with the TOR Process
+    TorControl - Uses the TOR Control Protocol to communicate with the TOR Process
     Copyright (C) 2018 Zach Perkitny
 
     This program is free software: you can redistribute it and/or modify
@@ -17,11 +17,11 @@
 */
 
 using System;
-using TorController.Enum;
+using TorControl.Enum;
 
-namespace TorController.Exceptions
+namespace TorControl.Exceptions
 {
-    public class CommandException : TorControllerException
+    public class CommandException : TorControlException
     {
         public Status Status { get; private set; }
 

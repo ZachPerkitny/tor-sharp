@@ -1,5 +1,5 @@
 ﻿/*
-    TorController - Uses the TOR Control Protocol to communicate with the TOR Process
+    TorControl - Uses the TOR Control Protocol to communicate with the TOR Process
     Copyright (C) 2018 Zach Perkitny
 
     This program is free software: you can redistribute it and/or modify
@@ -16,13 +16,21 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TorController
+namespace TorControl.Enum
 {
-    internal class AsyncEvent
+    public enum EventCode
     {
+        CIRC,
+        STREAM,
+        ORCONN,
+        BW,
+        DEBUG,
+        INFO,
+        NOTICE,
+        WARN,
+        ERR,
+        NEWDESC,
+        ADDRMAP,
+        AUTHDIR_NEWDESCS
     }
 }
