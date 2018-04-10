@@ -203,7 +203,7 @@ namespace TorController
         private Status ReadStatus()
         {
             string status = Encoding.ASCII.GetString(Receive(3));
-            return (Status)int.Parse(status);
+            return (Status)System.Enum.Parse(typeof(Status), status);
         }
 
         /// <summary>
