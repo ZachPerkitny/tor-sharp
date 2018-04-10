@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Net;
-using Socks;
+using TorController;
 
 namespace Driver
 {
@@ -8,8 +7,9 @@ namespace Driver
     {
         static void Main(string[] args)
         {
-            SocksServer socksServer = new SocksServer(IPAddress.Parse("127.0.0.1"), 5080);
-            socksServer.Start();
+            Controller controller = new Controller();
+            controller.Connect();
+            controller.Authenticate();
 
             Console.ReadLine();
         }

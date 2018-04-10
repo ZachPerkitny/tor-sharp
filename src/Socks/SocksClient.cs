@@ -34,6 +34,7 @@ namespace Socks
         private readonly byte[] _remoteBuffer;
 
         private bool _closed = false;
+        private bool _processed = false;
 
         private readonly object _locker = new object();
 
@@ -46,6 +47,11 @@ namespace Socks
 
         public async Task<bool> Connect()
         {
+            if (_processed)
+            {
+                return true;
+            }
+
             if (_closed)
             {
                 return false;
@@ -76,6 +82,7 @@ namespace Socks
                 _remoteSocket.BeginReceive(_remoteBuffer, 0, _remoteBuffer.Length, 0, OnReceivedDataFromRemote, _remoteSocket);
 
                 request.SendSuccessResponse();
+                _processed = true;
                 return true;
             }
             catch (SocksRequestException)

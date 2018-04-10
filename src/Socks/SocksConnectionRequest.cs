@@ -70,7 +70,7 @@ namespace Socks
                 case SocksVersion.Socks4:
                 {
                     CommandCode = (CommandCode)Recieve(1)[0];
-                    Port = GetPort();
+                    Port = ReadPort();
                     byte[] ipv4Address = Recieve(4);
                     UserID = ReadNullTerminated();
 
@@ -113,7 +113,7 @@ namespace Socks
             return CommandCode == CommandCode.Binding;
         }
 
-        private ushort GetPort()
+        private ushort ReadPort()
         {
             byte[] port = Recieve(2);
             // in network byte order
@@ -160,12 +160,12 @@ namespace Socks
             {
                 int received = _socket.Receive(buffer, offset, buffer.Length - offset, 0);
 
-                offset += received;
-
                 if (received == 0)
                 {
-                    throw new SocksRequestException("Something Something, missing bytes");
+                    throw new SocksRequestException("No Bytes Received, Expected {0}, Got {1}", count, offset);
                 }
+
+                offset += received;
             }
 
             return buffer;
